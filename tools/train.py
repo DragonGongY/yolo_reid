@@ -69,6 +69,12 @@ def main():
         help="Path to dataset root directory"
     )
     parser.add_argument(
+        "--batch_size", type=int, default=60, help="Batch size for training"
+    )
+    parser.add_argument(
+        "--epochs", type=int, default=180, help="Number of training epochs"
+    )
+    parser.add_argument(
         "--output_dir", type=str, default="outputs", help="Path to output directory"
     )
     parser.add_argument('--LAST_STRIDE', type=int, default=1, help='last stride')
@@ -99,6 +105,8 @@ def main():
         cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
     cfg.DATASETS.ROOT_DIR = args.dataset_root
+    cfg.SOLVER.IMS_PER_BATCH = args.batch_size  # Fix: Use SOLVER.IMS_PER_BATCH instead of DATALOADER.IMS_PER_BATCH
+    cfg.SOLVER.MAX_EPOCHS = args.epochs
     cfg.freeze()
 
     output_dir = args.output_dir
@@ -107,6 +115,7 @@ def main():
 
     logger.info("yolov7 reid_baseline")
     logger.info("Using {} GPUS".format(num_gpus))
+    logger.info(f"Batch size set to: {cfg.SOLVER.IMS_PER_BATCH}")
     logger.info(args)
 
     if args.config_file != "":
