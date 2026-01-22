@@ -62,6 +62,11 @@ def main():
     parser.add_argument(
         "--config_file", type=str, default="configs/softmax_triplet.yml", help="path to config file"
     )
+    parser.add_argument(
+        "--dataset_root", type=str, 
+        default='/mnt/e/datasets/snooker_live_vision/market1501', 
+        help="Path to dataset root directory"
+    )
     parser.add_argument('--LAST_STRIDE', type=int, default=1, help='last stride')
     parser.add_argument('--weights', type=str, default='weights/r50_ibn_2.pth')
     parser.add_argument('--neck', type=str, default='bnneck', help='If train with BNNeck, options: bnneck or no')
@@ -89,11 +94,12 @@ def main():
     if args.config_file != "":
         cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
+    cfg.DATASETS.ROOT_DIR = args.dataset_root
     cfg.freeze()
 
     output_dir = cfg.OUTPUT_DIR
-    if output_dir and not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
+
 
     logger.info("yolov7 reid_baseline")
     logger.info("Using {} GPUS".format(num_gpus))
