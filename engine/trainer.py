@@ -323,7 +323,7 @@ def do_train(
             # Detailed logging at specified intervals (overwrite progress bar)
             if log_period > 0 and (i + 1) % log_period == 0:
                 print(f"\r{' ' * 100}\r", end='')  # Clear line
-                logger.info(f"Epoch[{epoch + 1}] Step[{i + 1}/{total_batches}] Loss: {loss.item():.4f}, "
+                logger.info(f"Epoch[{epoch + 1}/{epochs}] Step[{i + 1}/{total_batches}] Loss: {loss.item():.4f}, "
                            f"Avg Loss: {avg_loss:.4f}, LR: {current_lr:.2e}")
         
         # Clear progress bar line at epoch end
@@ -331,9 +331,7 @@ def do_train(
         
         epoch_end_time = time.time()
         epoch_duration = epoch_end_time - epoch_start_time
-        
-        logger.info(f"Epoch {epoch + 1} completed in {epoch_duration:.2f}s, Average Loss: {avg_loss:.4f}")
-        
+                
         epoch_end_time = time.time()
         epoch_duration = epoch_end_time - epoch_start_time
         
