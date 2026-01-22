@@ -296,9 +296,9 @@ def do_train(
             # Handle loss function output (could be tuple or single value)
             if isinstance(loss_output, tuple):
                 loss = loss_output[0]  # Take the first element as the actual loss
-                if len(loss_output) > 1:
+                # if len(loss_output) > 1:
                     # Log additional loss components if available
-                    logger.info(f"Loss components: main={loss.item():.4f}, additional={len(loss_output)-1} components")
+                    # logger.info(f"Loss components: main={loss.item():.4f}, additional={len(loss_output)-1} components")
             else:
                 loss = loss_output
             
