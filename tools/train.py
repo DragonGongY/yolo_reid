@@ -78,7 +78,7 @@ def main():
         "--early_stopping_patience", type=int, default=10, help="Patience for early stopping"
     )
     parser.add_argument(
-        "--enable_early_stopping", type=bool, default=True, action='store_true', help="Enable early stopping"
+        "--enable_early_stopping", type=bool, default=True, help="Enable early stopping"
     )
     parser.add_argument(
         "--output_dir", type=str, default="outputs", help="Path to output directory"
