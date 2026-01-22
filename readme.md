@@ -1,23 +1,6 @@
-
-
-# 环境说明
-
-torch:1.7.0
-
-torchvision:0.8.0
-
-loguru: 0.5.3
-
-protobuf:3.20.0
-
-tensorboardX:2.6.2.2
-
-pytorch-ignite : 0.4.11
-
 # 训练
 
 将 **r50_ibn_2.pth，resnet50-19c8e357.pth**放在yolov7_reid/weights下【文末有权重下载链接】
-
 
 ```bash
 
@@ -50,25 +33,15 @@ ps:arrow_right:**该训练reid项目与person_search项目是独立的！！**�
 参数说明：
 
 --config_file: 配置文件路径，默认configs/softmax_triplet.yml
-
 --weights: pretrained weight path
-
 --neck:  If train with BNNeck, options: **bnneck** or no
-
 --test_neck:  BNNeck to be used for test, before or after BNNneck options: **before** or **after**
-
 --model_name: Name of backbone.
-
 --pretrain_choice: Imagenet
-
 --IF_WITH_CENTER: us center loss, True or False.
-
 --resume:resume train
-
 --freeze: freeze train
-
 --freeze:freeze train epochs
-
 :fountain_pen:
 
 配置文件的修改：
@@ -105,16 +78,12 @@ Dataset statistics:
   ----------------------------------------
 Loading pretrained ImageNet model......
 
-
 2023-02-24 21:08:22.121 | INFO     | engine.trainer:log_training_loss:194 - Epoch[1] Iteration[19/1484] Loss: 9.194, Acc: 0.002, Base Lr: 3.82e-05
 2023-02-24 21:08:22.315 | INFO     | engine.trainer:log_training_loss:194 - Epoch[1] Iteration[20/1484] Loss: 9.156, Acc: 0.002, Base Lr: 3.82e-05
 2023-02-24 21:08:22.537 | INFO     | engine.trainer:log_training_loss:194 - Epoch[1] Iteration[21/1484] Loss: 9.119, Acc: 0.002, Base Lr: 3.82e-05
 
 
 ```
-
-
-
 # 测试
 
 输入以下命令即可快速开启测试，获得测试结果
@@ -135,26 +104,6 @@ CMC curve, Rank-5  :99.1%
 CMC curve, Rank-10 :99.5%
 ```
 
-
-CSDN：http://t.csdnimg.cn/mh1Hg
-
-
 #  训练预权重下载：
-
-将 **r50_ibn_2.pth，resnet50-19c8e357.pth**放在yolov7_reid/weights下
-
-链接：https://pan.baidu.com/s/121ewlMgT_ad7tYxbP4L_Yw 
-提取码：yypn 
-
-
-
-
-# 说明
-
-开发不易，yolov7 reid中的**核心训练代码部分为有偿提供**。
-
-训练代码为200RMB(不含tensorboard)，如果还需要包含tensorboard可视化为300RMB（含训练代码）。【拒绝讲价】
-
-联系方式：wechat  y24065939s
-
-tensorboard新增内容：hard sample可视化
+通过网盘分享的文件：yolov_reid
+链接: https://pan.baidu.com/s/1O7Lu1OL3tjJ__RYqFKLjgg?pwd=kf2e 提取码: kf2e
