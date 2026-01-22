@@ -9,7 +9,7 @@ import numpy as np
 from loguru import logger
 
 
-def save_checkpoint(model, optimizer, epoch, output_dir, is_best=False, checkpoint_name='checkpoint', best_path=None):
+def save_checkpoint(model, optimizer, epoch, output_dir, is_best=False, checkpoint_name='checkpoint', best_path=None, mAP=None):
     """Save model checkpoint"""
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -21,11 +21,11 @@ def save_checkpoint(model, optimizer, epoch, output_dir, is_best=False, checkpoi
     }
     
     if is_best:
-        best_model_path = best_path if best_path else os.path.join(output_dir, 'best_model.pth')
+        best_model_path = os.path.join(output_dir, f'epoch_{epoch}_map_{mAP:.4f}_best_model.pth')
         torch.save(checkpoint, best_model_path)
         logger.info(f"Best model saved to {best_model_path}")
     else:
-        checkpoint_path = os.path.join(output_dir, f'{checkpoint_name}_epoch_{epoch}.pth')
+        checkpoint_path = os.path.join(output_dir, f'{checkpoint_name}_epoch_{epoch}_map_{mAP:.4f}.pth')
         torch.save(checkpoint, checkpoint_path)
         logger.info(f"Checkpoint saved to {checkpoint_path}")
 
@@ -350,10 +350,10 @@ def do_train(
         
         logger.info(f"Epoch {epoch + 1} completed in {epoch_duration:.2f}s, Average Loss: {avg_loss:.4f}")
         
-        # Save checkpoint
-        if (epoch + 1) % checkpoint_period == 0:
-            save_checkpoint(model, optimizer, epoch + 1, output_dir)
-            logger.info(f"Checkpoint saved for epoch {epoch + 1}")
+        # # Save checkpoint
+        # if (epoch + 1) % checkpoint_period == 0:
+        #     save_checkpoint(model, optimizer, epoch + 1, output_dir, mAP)
+        #     logger.info(f"Checkpoint saved for epoch {epoch + 1}")
         
         # Validation
         validation_results = None
@@ -375,7 +375,7 @@ def do_train(
                 logger.info(f"New best model found! mAP: {mAP:.1%}, Rank-1: {current_rank1:.1%}")
                 logger.info(f"Saving best model to {best_model_path}")
                 
-                save_checkpoint(model, optimizer, epoch + 1, output_dir, is_best=True, best_path=best_model_path)
+                save_checkpoint(model, optimizer, epoch + 1, output_dir, is_best=True, best_path=best_model_path, mAP=best_mAP) 
                 logger.info(f"Best model saved at epoch {epoch + 1}")
             else:
                 logger.info(f"Current model - mAP: {mAP:.1%}, Rank-1: {current_rank1:.1%} (Best: mAP: {best_mAP:.1%}, Rank-1: {best_rank1:.1%} at epoch {best_epoch})")
@@ -548,7 +548,7 @@ def do_train_with_center(
         
         # Save checkpoint
         if (epoch + 1) % checkpoint_period == 0:
-            save_checkpoint(model, optimizer, epoch + 1, output_dir)
+            save_checkpoint(model, optimizer, epoch + 1, output_dir, mAP)
             logger.info(f"Checkpoint saved for epoch {epoch + 1}")
         
         # Validation
