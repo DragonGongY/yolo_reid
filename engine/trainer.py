@@ -272,16 +272,13 @@ def do_train(
         
         logger.info(f"Epoch {epoch + 1}/{epochs} started, LR: {current_lr:.6f}")
         
+        # Progress bar setup
+        total_batches = len(train_loader)
+        progress_bar_length = 50
+        last_progress = -1
+        
         for i, batch in enumerate(train_loader):
             current_iteration += 1
-            
-            # Progress logging every 10% or at log period
-            if len(train_loader) >= 10:
-                progress_10_percent = len(train_loader) // 10
-                if (i + 1) % progress_10_percent == 0:
-                    progress_percent = (i + 1) / len(train_loader) * 100
-                    overall_progress = current_iteration / total_iterations * 100
-                    logger.info(f"Progress: Epoch {epoch + 1} - {progress_percent:.1f}% ({i + 1}/{len(train_loader)} batches), Overall: {overall_progress:.1f}%")
             
             optimizer.zero_grad()
             
@@ -296,9 +293,6 @@ def do_train(
             # Handle loss function output (could be tuple or single value)
             if isinstance(loss_output, tuple):
                 loss = loss_output[0]  # Take the first element as the actual loss
-                # if len(loss_output) > 1:
-                    # Log additional loss components if available
-                    # logger.info(f"Loss components: main={loss.item():.4f}, additional={len(loss_output)-1} components")
             else:
                 loss = loss_output
             
@@ -310,17 +304,35 @@ def do_train(
             num_batches += 1
             avg_loss = epoch_loss / num_batches
             
-            # Detailed logging at specified intervals
-            if log_period > 0 and (i + 1) % log_period == 0:
-                logger.info("Epoch[{}] Iteration[{}/{}] Loss: {:.4f}, Avg Loss: {:.4f}, LR: {:.2e}"
-                           .format(epoch + 1, i + 1, len(train_loader), loss.item(), avg_loss, current_lr))
+            # Progress bar update
+            progress = (i + 1) / total_batches
+            progress_percent = progress * 100
             
-            # Memory usage logging for CUDA
-            if device == 'cuda' and (i + 1) % (log_period * 5) == 0:
-                if torch.cuda.is_available():
-                    memory_allocated = torch.cuda.memory_allocated() / 1024**3  # GB
-                    memory_cached = torch.cuda.memory_reserved() / 1024**3  # GB
-                    logger.info(f"GPU Memory: Allocated: {memory_allocated:.2f}GB, Cached: {memory_cached:.2f}GB")
+            # Only update progress bar when progress changes significantly (every 2%)
+            current_progress_int = int(progress_percent / 2)
+            if current_progress_int != last_progress:
+                last_progress = current_progress_int
+                filled_length = int(progress_bar_length * progress)
+                bar = '█' * filled_length + '-' * (progress_bar_length - filled_length)
+                overall_progress = current_iteration / total_iterations * 100
+                
+                # Clean line and print progress bar
+                print(f"\rEpoch {epoch + 1}: |{bar}| {progress_percent:.1f}% ({i + 1}/{total_batches}) "
+                      f"Loss: {avg_loss:.4f} | Overall: {overall_progress:.1f}%", end='', flush=True)
+            
+            # Detailed logging at specified intervals (overwrite progress bar)
+            if log_period > 0 and (i + 1) % log_period == 0:
+                print(f"\r{' ' * 100}\r", end='')  # Clear line
+                logger.info(f"Epoch[{epoch + 1}] Step[{i + 1}/{total_batches}] Loss: {loss.item():.4f}, "
+                           f"Avg Loss: {avg_loss:.4f}, LR: {current_lr:.2e}")
+        
+        # Clear progress bar line at epoch end
+        print(f"\r{' ' * 100}\r", end='')
+        
+        epoch_end_time = time.time()
+        epoch_duration = epoch_end_time - epoch_start_time
+        
+        logger.info(f"Epoch {epoch + 1} completed in {epoch_duration:.2f}s, Average Loss: {avg_loss:.4f}")
         
         epoch_end_time = time.time()
         epoch_duration = epoch_end_time - epoch_start_time
@@ -333,9 +345,11 @@ def do_train(
             logger.info(f"Checkpoint saved for epoch {epoch + 1}")
         
         # Validation
+        validation_results = None
         if (epoch + 1) % eval_period == 0:
             logger.info(f"Running validation at epoch {epoch + 1}")
             cmc, mAP = validate_model(cfg, model, val_loader, num_query, device)
+            validation_results = (cmc, mAP)
             
             # Check if this is the best model so far
             current_rank1 = cmc[0] if len(cmc) > 0 else 0.0
@@ -354,6 +368,21 @@ def do_train(
                 logger.info(f"Best model saved at epoch {epoch + 1}")
             else:
                 logger.info(f"Current model - mAP: {mAP:.1%}, Rank-1: {current_rank1:.1%} (Best: mAP: {best_mAP:.1%}, Rank-1: {best_rank1:.1%} at epoch {best_epoch})")
+        
+        # Print validation results summary after epoch completion
+        if validation_results:
+            cmc, mAP = validation_results
+            current_rank1 = cmc[0] if len(cmc) > 0 else 0.0
+            logger.info("="*60)
+            logger.info(f"EPOCH {epoch + 1} SUMMARY:")
+            logger.info(f"  Training Time: {epoch_duration:.2f}s, Average Loss: {avg_loss:.4f}")
+            logger.info(f"  Validation Results:")
+            logger.info(f"    mAP: {mAP:.1%}")
+            logger.info(f"    Rank-1: {current_rank1:.1%}")
+            logger.info(f"    Rank-5: {cmc[4]:.1%}" if len(cmc) >= 5 else f"    Rank-5: N/A")
+            logger.info(f"    Rank-10: {cmc[9]:.1%}" if len(cmc) >= 10 else f"    Rank-10: N/A")
+            logger.info(f"  Best Model: mAP={best_mAP:.1%}, Rank-1={best_rank1:.1%} (Epoch {best_epoch})")
+            logger.info("="*60)
     
     logger.info("Training completed successfully!")
     logger.info(f"Total iterations: {current_iteration}")
