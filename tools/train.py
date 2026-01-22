@@ -65,7 +65,11 @@ def main():
     parser.add_argument(
         "--dataset_root", type=str, 
         default='/mnt/e/datasets/snooker_live_vision/market1501', 
+        # default='/mnt/e/datasets/snooker_live_vision', 
         help="Path to dataset root directory"
+    )
+    parser.add_argument(
+        "--output_dir", type=str, default="outputs", help="Path to output directory"
     )
     parser.add_argument('--LAST_STRIDE', type=int, default=1, help='last stride')
     parser.add_argument('--weights', type=str, default='weights/r50_ibn_2.pth')
@@ -97,7 +101,7 @@ def main():
     cfg.DATASETS.ROOT_DIR = args.dataset_root
     cfg.freeze()
 
-    output_dir = cfg.OUTPUT_DIR
+    output_dir = args.output_dir
     os.makedirs(output_dir, exist_ok=True)
 
 
