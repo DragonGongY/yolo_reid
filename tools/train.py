@@ -75,6 +75,12 @@ def main():
         "--epochs", type=int, default=180, help="Number of training epochs"
     )
     parser.add_argument(
+        "--early_stopping_patience", type=int, default=10, help="Patience for early stopping"
+    )
+    parser.add_argument(
+        "--enable_early_stopping", type=bool, default=True, action='store_true', help="Enable early stopping"
+    )
+    parser.add_argument(
         "--output_dir", type=str, default="outputs", help="Path to output directory"
     )
     parser.add_argument('--LAST_STRIDE', type=int, default=1, help='last stride')
@@ -107,10 +113,14 @@ def main():
     cfg.DATASETS.ROOT_DIR = args.dataset_root
     cfg.SOLVER.IMS_PER_BATCH = args.batch_size  # Fix: Use SOLVER.IMS_PER_BATCH instead of DATALOADER.IMS_PER_BATCH
     cfg.SOLVER.MAX_EPOCHS = args.epochs
+    cfg.EARLY_STOPPING.ENABLED = args.enable_early_stopping
+    cfg.EARLY_STOPPING.PATIENCE = args.early_stopping_patience
+    cfg.OUTPUT_DIR = args.output_dir
+    os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
+    if args.enable_early_stopping:
+        cfg.EARLY_STOPPING.ENABLED = True
     cfg.freeze()
 
-    output_dir = args.output_dir
-    os.makedirs(output_dir, exist_ok=True)
 
 
     logger.info("yolov7 reid_baseline")

@@ -260,6 +260,19 @@ def do_train(
     best_model_path = os.path.join(output_dir, "best_model.pth")
     logger.info(f"Best model will be saved to: {best_model_path}")
     
+    # Early stopping setup
+    early_stopping_enabled = cfg.EARLY_STOPPING.ENABLED
+    early_stopping_patience = cfg.EARLY_STOPPING.PATIENCE
+    early_stopping_min_improvement = cfg.EARLY_STOPPING.MIN_IMPROVEMENT  # Convert percentage to decimal
+    early_stopping_monitor = cfg.EARLY_STOPPING.MONITOR
+    epochs_without_improvement = 0
+    best_monitor_value = 0.0
+    
+    if early_stopping_enabled:
+        logger.info(f"Early stopping enabled: patience={early_stopping_patience}, "
+                   f"min_improvement={cfg.EARLY_STOPPING.MIN_IMPROVEMENT}%, "
+                   f"monitor={early_stopping_monitor}")
+    
     for epoch in range(start_epoch, epochs):
         model.train()
         epoch_loss = 0.0
@@ -367,6 +380,34 @@ def do_train(
             else:
                 logger.info(f"Current model - mAP: {mAP:.1%}, Rank-1: {current_rank1:.1%} (Best: mAP: {best_mAP:.1%}, Rank-1: {best_rank1:.1%} at epoch {best_epoch})")
         
+        # Early stopping logic
+        if early_stopping_enabled and validation_results:
+            cmc, mAP = validation_results
+            current_rank1 = cmc[0] if len(cmc) > 0 else 0.0
+            
+            # Get current monitor value
+            if early_stopping_monitor == 'mAP':
+                current_monitor_value = mAP
+            else:  # rank1
+                current_monitor_value = current_rank1
+            
+            # Check for improvement
+            improvement = current_monitor_value - best_monitor_value
+            if improvement > early_stopping_min_improvement:
+                best_monitor_value = current_monitor_value
+                epochs_without_improvement = 0
+                logger.info(f"Early stopping: Improvement detected ({improvement:.1%} > {early_stopping_min_improvement:.1%})")
+            else:
+                epochs_without_improvement += 1
+                logger.info(f"Early stopping: No significant improvement for {epochs_without_improvement} epochs "
+                           f"(current: {current_monitor_value:.1%}, best: {best_monitor_value:.1%})")
+            
+            # Check if should stop training
+            if epochs_without_improvement >= early_stopping_patience:
+                logger.warning(f"Early stopping triggered! No improvement for {epochs_without_improvement} epochs.")
+                logger.warning(f"Stopping training at epoch {epoch + 1}")
+                break
+        
         # Print validation results summary after epoch completion
         if validation_results:
             cmc, mAP = validation_results
@@ -380,9 +421,17 @@ def do_train(
             logger.info(f"    Rank-5: {cmc[4]:.1%}" if len(cmc) >= 5 else f"    Rank-5: N/A")
             logger.info(f"    Rank-10: {cmc[9]:.1%}" if len(cmc) >= 10 else f"    Rank-10: N/A")
             logger.info(f"  Best Model: mAP={best_mAP:.1%}, Rank-1={best_rank1:.1%} (Epoch {best_epoch})")
+            if early_stopping_enabled:
+                logger.info(f"  Early Stopping: {epochs_without_improvement}/{early_stopping_patience} epochs without improvement")
             logger.info("="*60)
     
-    logger.info("Training completed successfully!")
+    # Final training summary
+    if early_stopping_enabled and epochs_without_improvement >= early_stopping_patience:
+        logger.info("Training stopped early due to no improvement!")
+        logger.info(f"Stopped at epoch {epoch + 1} after {epochs_without_improvement} epochs without improvement")
+    else:
+        logger.info("Training completed successfully!")
+    
     logger.info(f"Total iterations: {current_iteration}")
     logger.info(f"Best model achieved at epoch {best_epoch} with mAP: {best_mAP:.1%} and Rank-1: {best_rank1:.1%}")
     logger.info(f"Best model saved to: {best_model_path}")

@@ -131,6 +131,19 @@ _C.TEST.WEIGHT = ""
 _C.TEST.FEAT_NORM = 'yes'
 
 # ---------------------------------------------------------------------------- #
+# Early Stopping options
+# ---------------------------------------------------------------------------- #
+_C.EARLY_STOPPING = CN()
+# Enable early stopping
+_C.EARLY_STOPPING.ENABLED = True
+# Number of epochs with no improvement to wait before stopping
+_C.EARLY_STOPPING.PATIENCE = 10
+# Minimum improvement required to reset patience counter (in percentage)
+_C.EARLY_STOPPING.MIN_IMPROVEMENT = 0.1
+# Metric to monitor for early stopping ('mAP' or 'rank1')
+_C.EARLY_STOPPING.MONITOR = 'mAP'
+
+# ---------------------------------------------------------------------------- #
 # Misc options
 # ---------------------------------------------------------------------------- #
 # Path to checkpoint and saved log of trained model
